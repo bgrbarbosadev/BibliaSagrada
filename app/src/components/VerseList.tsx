@@ -6,12 +6,17 @@ import type { ChapterData } from '../types/bible'
 interface Props {
   chapter: ChapterData
   highlightVerse: number | null
+  speakingVerse: number | null
   rtl: boolean
   bodyClass?: string
+  bookId: string
+  chapterNum: number
 }
 
-const VerseList = memo(function VerseList({ chapter, highlightVerse, rtl, bodyClass }: Props) {
+const VerseList = memo(function VerseList({ chapter, highlightVerse, speakingVerse, rtl, bodyClass, bookId, chapterNum }: Props) {
   const fontSize = useReaderStore((s) => s.fontSize)
+  const markedVerses = useReaderStore((s) => s.markedVerses)
+  const toggleMarkedVerse = useReaderStore((s) => s.toggleMarkedVerse)
   const entries = Object.entries(chapter).sort(
     ([a], [b]) => Number(a) - Number(b)
   )
@@ -24,6 +29,9 @@ const VerseList = memo(function VerseList({ chapter, highlightVerse, rtl, bodyCl
           number={num}
           text={text}
           highlighted={highlightVerse === Number(num)}
+          speaking={speakingVerse === Number(num)}
+          marked={markedVerses.includes(`${bookId}/${chapterNum}/${num}`)}
+          onDoubleClick={() => toggleMarkedVerse(bookId, chapterNum, num)}
           rtl={rtl}
           fontSize={fontSize}
           bodyClass={bodyClass}

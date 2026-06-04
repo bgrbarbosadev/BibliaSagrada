@@ -20,6 +20,8 @@ interface ReaderStore {
   readingPlan: ReadingPlanId
   musicTrack: MusicTrackId | null
   musicVolume: number
+  readPages: string[]
+  markedVerses: string[]
   toggleTheme: () => void
   toggleCompareMode: () => void
   setCompareVersions: (versions: string[]) => void
@@ -29,6 +31,8 @@ interface ReaderStore {
   setReadingPlan: (id: ReadingPlanId) => void
   setMusicTrack: (id: MusicTrackId | null) => void
   setMusicVolume: (v: number) => void
+  toggleReadPage: (bookId: string, chapter: number) => void
+  toggleMarkedVerse: (bookId: string, chapter: number, verse: string) => void
 }
 
 function applyTheme(theme: Theme) {
@@ -66,8 +70,33 @@ export const useReaderStore = create<ReaderStore>()(
       musicTrack: null,
       musicVolume: 0.3,
 
+      readPages: [],
+      markedVerses: [],
+
       setMusicTrack: (id) => set({ musicTrack: id }),
       setMusicVolume: (v) => set({ musicVolume: v }),
+
+      toggleReadPage: (bookId, chapter) =>
+        set((state) => {
+          const key = `${bookId}/${chapter}`
+          const exists = state.readPages.includes(key)
+          return {
+            readPages: exists
+              ? state.readPages.filter(p => p !== key)
+              : [...state.readPages, key],
+          }
+        }),
+
+      toggleMarkedVerse: (bookId, chapter, verse) =>
+        set((state) => {
+          const key = `${bookId}/${chapter}/${verse}`
+          const exists = state.markedVerses.includes(key)
+          return {
+            markedVerses: exists
+              ? state.markedVerses.filter(v => v !== key)
+              : [...state.markedVerses, key],
+          }
+        }),
 
       toggleTheme: () =>
         set((state) => {

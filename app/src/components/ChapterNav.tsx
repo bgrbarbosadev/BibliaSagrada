@@ -1,5 +1,13 @@
 import { useNavigate } from 'react-router-dom'
 import type { BookMeta } from '../types/bible'
+import { useReaderStore } from '../store/useReaderStore'
+
+const SELECT_BG: Record<string, string> = {
+  default:   '',
+  parchment: '#f9f0d8',
+  forest:    '#1f3a1f',
+  night:     '#1a1830',
+}
 
 interface Props {
   book: BookMeta
@@ -10,6 +18,7 @@ interface Props {
 
 export default function ChapterNav({ book, chapter, version, isDark = false }: Props) {
   const navigate = useNavigate()
+  const bgTheme = useReaderStore((s) => s.bgTheme)
 
   const hasPrev = chapter > 1
   const hasNext = chapter < book.chapters
@@ -20,8 +29,9 @@ export default function ChapterNav({ book, chapter, version, isDark = false }: P
 
   const btnText   = isDark ? 'text-white/70 hover:bg-white/10' : 'text-stone-500 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-700'
   const selectCls = isDark
-    ? 'border-white/20 text-white/90 bg-transparent'
-    : 'border-stone-300 dark:border-stone-600 text-stone-700 dark:text-stone-200 bg-transparent'
+    ? 'border-white/20 text-white/90'
+    : 'border-stone-300 dark:border-stone-600 text-stone-700 dark:text-stone-200'
+  const selectBg = SELECT_BG[bgTheme] || ''
 
   return (
     <div className="flex items-center gap-3">
@@ -39,10 +49,11 @@ export default function ChapterNav({ book, chapter, version, isDark = false }: P
       <select
         value={chapter}
         onChange={(e) => go(Number(e.target.value))}
+        style={selectBg ? { backgroundColor: selectBg } : undefined}
         className={`text-sm border rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer ${selectCls}`}
       >
         {Array.from({ length: book.chapters }, (_, i) => i + 1).map((c) => (
-          <option key={c} value={c}>
+          <option key={c} value={c} style={selectBg ? { backgroundColor: selectBg } : undefined}>
             Capítulo {c}
           </option>
         ))}

@@ -1,4 +1,5 @@
 import type React from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useReaderStore, type BgThemeId, type ReadingPlanId, type MusicTrackId } from '../store/useReaderStore'
 
 export interface BgTheme {
@@ -91,8 +92,18 @@ export const READING_PLANS: { id: ReadingPlanId; label: string; description: str
   { id: 'full-bible',    label: 'Bíblia Completa',  description: '1.189 capítulos' },
 ]
 
+const PLAN_START: Record<ReadingPlanId, { book: string; chapter: number }> = {
+  'free':          { book: 'GEN', chapter: 1 },
+  'gospels':       { book: 'MAT', chapter: 1 },
+  'psalms':        { book: 'PSA', chapter: 1 },
+  'new-testament': { book: 'MAT', chapter: 1 },
+  'full-bible':    { book: 'GEN', chapter: 1 },
+}
+
 export default function Sidebar() {
   const { bgTheme, setBgTheme, readingPlan, setReadingPlan, musicTrack, setMusicTrack, musicVolume, setMusicVolume } = useReaderStore()
+  const navigate = useNavigate()
+  const { version = 'ARC' } = useParams()
   const active = BG_THEMES.find(t => t.id === bgTheme)!
   const isDark = active.isDark
   const isParchment = bgTheme === 'parchment'
@@ -115,11 +126,6 @@ export default function Sidebar() {
     return 'text-stone-400 dark:text-stone-500'
   }
 
-  function descClass() {
-    if (isDark) return 'text-white/40'
-    if (isParchment) return 'text-black/60'
-    return 'text-stone-400 dark:text-stone-500'
-  }
 
   function sliderAccent() {
     if (isDark) return '#f59e0b'
@@ -128,19 +134,18 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className={`w-52 flex-shrink-0 border-l px-4 py-6 flex flex-col gap-6 transition-colors duration-500 ${
+    <aside className={`w-96 flex-shrink-0 border-l px-4 py-6 flex flex-col gap-5 overflow-y-auto transition-colors duration-500 ${
       isDark
         ? 'border-white/10 bg-black/10'
         : 'border-stone-200 dark:border-stone-700'
     }`}>
 
+      {/* Linha 1: Tema de fundo — largura total */}
       <section>
-        <h2 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${
-          labelClass()
-        }`}>
+        <h2 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${labelClass()}`}>
           Tema de fundo
         </h2>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-4 gap-2">
           {BG_THEMES.map((t) => (
             <button
               key={t.id}
@@ -170,83 +175,75 @@ export default function Sidebar() {
 
       <div className={`border-t ${isDark ? 'border-white/10' : 'border-stone-200 dark:border-stone-700'}`} />
 
-      <section>
-        <h2 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${
-          labelClass()
-        }`}>
-          Plano de leitura
-        </h2>
-        <div className="flex flex-col gap-1.5">
-          {READING_PLANS.map((plan) => (
-            <button
-              key={plan.id}
-              onClick={() => setReadingPlan(plan.id)}
-              className={`text-left px-3 py-2 rounded-lg transition-colors ${
-                readingPlan === plan.id
-                  ? selectedClass()
-                  : unselectedClass()
-              }`}
-            >
-              <p className="text-sm font-semibold leading-tight">{plan.label}</p>
-              <p className={`text-xs leading-tight mt-0.5 ${
-                labelClass()
-              }`}>{plan.description}</p>
-            </button>
-          ))}
-        </div>
-      </section>
+      {/* Linha 2: Música de fundo | Plano de leitura */}
+      <div className="grid grid-cols-2 gap-4">
 
-      <div className={`border-t ${isDark ? 'border-white/10' : 'border-stone-200 dark:border-stone-700'}`} />
-
-      <section>
-        <h2 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${
-          labelClass()
-        }`}>
-          Música de fundo
-        </h2>
-        <div className="flex flex-col gap-1.5">
-          {MUSIC_TRACKS.map((track) => (
-            <button
-              key={track.id ?? 'silence'}
-              onClick={() => setMusicTrack(track.id as MusicTrackId | null)}
-              className={`text-left px-3 py-2 rounded-lg transition-colors ${
-                musicTrack === track.id
-                  ? selectedClass()
-                  : unselectedClass()
-              }`}
-            >
-              <p className="text-sm font-semibold leading-tight flex items-center gap-1.5">
-                <span className="opacity-70">{track.icon}</span>
-                {track.label}
-              </p>
-              <p className={`text-xs leading-tight mt-0.5 ${
-                labelClass()
-              }`}>{track.description}</p>
-            </button>
-          ))}
-        </div>
-
-        {musicTrack && (
-          <div className="mt-3 px-1">
-            <div className={`flex items-center justify-between mb-1 ${
-              labelClass()
-            }`}>
-              <span className="text-xs">Volume</span>
-              <span className="text-xs tabular-nums">{Math.round(musicVolume * 100)}%</span>
-            </div>
-            <input
-              type="range"
-              min={0}
-              max={1}
-              step={0.01}
-              value={musicVolume}
-              onChange={(e) => setMusicVolume(Number(e.target.value))}
-              className="w-full h-1 rounded-full appearance-none cursor-pointer"
-              style={{ accentColor: sliderAccent() }}
-            />
+        <section>
+          <h2 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${labelClass()}`}>
+            Música de fundo
+          </h2>
+          <div className="flex flex-col gap-1.5">
+            {MUSIC_TRACKS.map((track) => (
+              <button
+                key={track.id ?? 'silence'}
+                onClick={() => setMusicTrack(track.id as MusicTrackId | null)}
+                className={`text-left px-2 py-1.5 rounded-lg transition-colors ${
+                  musicTrack === track.id ? selectedClass() : unselectedClass()
+                }`}
+              >
+                <p className="text-sm font-semibold leading-tight flex items-center gap-1">
+                  <span className="opacity-70">{track.icon}</span>
+                  {track.label}
+                </p>
+                <p className={`text-xs leading-tight mt-0.5 ${labelClass()}`}>{track.description}</p>
+              </button>
+            ))}
           </div>
-        )}
-      </section>
+          {musicTrack && (
+            <div className="mt-3 px-1">
+              <div className={`flex items-center justify-between mb-1 ${labelClass()}`}>
+                <span className="text-xs">Volume</span>
+                <span className="text-xs tabular-nums">{Math.round(musicVolume * 100)}%</span>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={1}
+                step={0.01}
+                value={musicVolume}
+                onChange={(e) => setMusicVolume(Number(e.target.value))}
+                className="w-full h-1 rounded-full appearance-none cursor-pointer"
+                style={{ accentColor: sliderAccent() }}
+              />
+            </div>
+          )}
+        </section>
+
+        <section>
+          <h2 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${labelClass()}`}>
+            Plano de leitura
+          </h2>
+          <div className="flex flex-col gap-1.5">
+            {READING_PLANS.map((plan) => (
+              <button
+                key={plan.id}
+                onClick={() => {
+                  setReadingPlan(plan.id)
+                  const { book, chapter } = PLAN_START[plan.id]
+                  navigate(`/ler/${version}/${book}/${chapter}`)
+                }}
+                className={`text-left px-2 py-1.5 rounded-lg transition-colors ${
+                  readingPlan === plan.id ? selectedClass() : unselectedClass()
+                }`}
+              >
+                <p className="text-sm font-semibold leading-tight">{plan.label}</p>
+                <p className={`text-xs leading-tight mt-0.5 ${labelClass()}`}>{plan.description}</p>
+              </button>
+            ))}
+          </div>
+        </section>
+
+      </div>
 
     </aside>
   )

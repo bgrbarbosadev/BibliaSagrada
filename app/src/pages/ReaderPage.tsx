@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom'
 import { getBook } from '../data/booksIndex'
 import { VERSIONS, DEFAULT_VERSION } from '../data/versions'
@@ -17,8 +17,14 @@ export default function ReaderPage() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
 
-  const { isCompareMode, toggleCompareMode, bgTheme } = useReaderStore()
+  const { isCompareMode, toggleCompareMode, bgTheme, readPages, toggleReadPage } = useReaderStore()
   const [compareVersion, setCompareVersion] = useState<string | null>(null)
+  const [isSpeaking, setIsSpeaking] = useState(false)
+  const [speakingVerse, setSpeakingVerse] = useState<number | null>(null)
+  const [isLibrasActive, setIsLibrasActive] = useState(false)
+  const vlibrasLoaded = useRef(false)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const vlibrasWidget = useRef<any>(null)
 
   const chapter = Number(chapterParam) || 1
   const verseParam = searchParams.get('verse')
@@ -42,13 +48,104 @@ export default function ReaderPage() {
     }
   }, [version, bookId, chapter, bookMeta, navigate, verseParam])
 
+  useEffect(() => {
+    window.speechSynthesis.cancel()
+    setIsSpeaking(false)
+    setSpeakingVerse(null)
+  }, [bookId, chapter])
+
+  useEffect(() => {
+    return () => { window.speechSynthesis.cancel() }
+  }, [])
+
   const { data, loading, error } = useBibleData(version, bookId)
+
+  useEffect(() => {
+    if (!isLibrasActive || speakingVerse === null) return
+    const chData = data?.chapters[String(chapter)]
+    const text = chData?.[String(speakingVerse)]
+    if (!text) return
+    try {
+      if (vlibrasWidget.current?.translate) {
+        vlibrasWidget.current.translate(text)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } else if ((window as any).VLibras?.Widget?.player?.translate) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ;(window as any).VLibras.Widget.player.translate(text)
+      }
+    } catch { /* widget ainda não pronto */ }
+  }, [speakingVerse, isLibrasActive, data, chapter])
 
   if (!bookMeta || !versionMeta) return null
 
   const rtl = versionMeta.direction === 'rtl'
   const chapterData = data?.chapters[String(chapter)]
   const theme = BG_THEMES.find(t => t.id === bgTheme)!
+
+  function clickVLibrasButton() {
+    const btn = document.querySelector('[vw-access-button]') as HTMLElement | null
+    btn?.click()
+  }
+
+  function handleToggleLibras() {
+    const container = document.getElementById('vlibras-container')
+
+    if (!isLibrasActive) {
+      if (container) {
+        container.style.visibility = 'visible'
+        container.style.pointerEvents = 'auto'
+      }
+
+      if (!vlibrasLoaded.current) {
+        const script = document.createElement('script')
+        script.src = 'https://vlibras.gov.br/app/vlibras-plugin.js'
+        script.onload = () => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          vlibrasWidget.current = new (window as any).VLibras.Widget('https://vlibras.gov.br/app')
+          vlibrasLoaded.current = true
+          // Aguarda assets do VLibras carregarem antes de abrir
+          setTimeout(clickVLibrasButton, 2000)
+        }
+        document.body.appendChild(script)
+      } else {
+        setTimeout(clickVLibrasButton, 200)
+      }
+    } else {
+      clickVLibrasButton()
+      setTimeout(() => {
+        if (container) {
+          container.style.visibility = 'hidden'
+          container.style.pointerEvents = 'none'
+        }
+      }, 400)
+    }
+
+    setIsLibrasActive(prev => !prev)
+  }
+
+  function handleToggleSpeech() {
+    if (isSpeaking) {
+      window.speechSynthesis.cancel()
+      setIsSpeaking(false)
+      setSpeakingVerse(null)
+      return
+    }
+    if (!chapterData) return
+    const verses = Object.entries(chapterData)
+      .sort(([a], [b]) => Number(a) - Number(b))
+    verses.forEach(([num, text], idx) => {
+      const utterance = new SpeechSynthesisUtterance(text)
+      utterance.lang = 'pt-BR'
+      utterance.rate = 0.9
+      utterance.onstart = () => setSpeakingVerse(Number(num))
+      if (idx === verses.length - 1) {
+        utterance.onend = () => { setIsSpeaking(false); setSpeakingVerse(null) }
+        utterance.onerror = () => { setIsSpeaking(false); setSpeakingVerse(null) }
+      }
+      window.speechSynthesis.speak(utterance)
+    })
+    setIsSpeaking(true)
+  }
 
   function handleSelectCompareVersion(v: string) {
     setCompareVersion(v)
@@ -63,7 +160,7 @@ export default function ReaderPage() {
 
   return (
     <div
-      className="min-h-screen flex flex-col transition-all duration-500"
+      className="h-screen flex flex-col overflow-hidden transition-all duration-500"
       style={theme.pageStyle}
     >
       <Header
@@ -78,21 +175,82 @@ export default function ReaderPage() {
         headerBg={theme.headerBg}
       />
 
-      <div className="flex flex-1 max-w-7xl mx-auto w-full">
+      <div className="flex flex-1 min-h-0 max-w-7xl mx-auto w-full">
 
         {/* Área principal */}
-        <main className="flex-1 min-w-0 px-6 py-6">
+        <main className="flex-1 min-w-0 flex flex-col min-h-0">
+          {/* Título — estático */}
+          <div className={`flex-shrink-0 px-6 pt-6 pb-3 border-b ${theme.border}`}>
+            <div className="flex items-center justify-between">
+              <h1 className={`text-xl font-bold ${theme.heading}`}>
+                {bookMeta.name} {chapter}
+              </h1>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleToggleSpeech}
+                  disabled={!chapterData}
+                  title={isSpeaking ? 'Parar leitura' : 'Ler página em áudio'}
+                  className="flex flex-col items-center gap-0.5 p-1 rounded transition-colors hover:opacity-80 disabled:opacity-30"
+                >
+                  {isSpeaking ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-amber-500" viewBox="0 0 24 24" fill="currentColor">
+                      <rect x="6" y="4" width="4" height="16" rx="1"/>
+                      <rect x="14" y="4" width="4" height="16" rx="1"/>
+                    </svg>
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" className={`w-5 h-5 ${theme.subheading}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M11 5L6 9H2v6h4l5 4V5z"/>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+                    </svg>
+                  )}
+                  <span className={`text-[10px] leading-none ${isSpeaking ? 'text-amber-500' : theme.subheading}`}>
+                    {isSpeaking ? 'Pausar' : 'Ler página'}
+                  </span>
+                </button>
+
+                <button
+                  onClick={handleToggleLibras}
+                  title={isLibrasActive ? 'Desativar Libras' : 'Ativar assistente de Libras'}
+                  className="flex flex-col items-center gap-0.5 p-1 rounded transition-colors hover:opacity-80"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className={`w-5 h-5 ${isLibrasActive ? 'text-amber-500' : theme.subheading}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 1 1 3 0m-3 6a1.5 1.5 0 0 0 3 0m0 0V8m0 3.5a1.5 1.5 0 0 1 3 0V11m0 0a1.5 1.5 0 0 1 3 0V11m-9 3a2 2 0 1 1-4 0 4 4 0 0 1 4-5m12 0a4 4 0 0 1-4 5" />
+                  </svg>
+                  <span className={`text-[10px] leading-none ${isLibrasActive ? 'text-amber-500' : theme.subheading}`}>
+                    Libras
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => toggleReadPage(bookId, chapter)}
+                  title={readPages.includes(`${bookId}/${chapter}`) ? 'Desmarcar como lido' : 'Marcar como lido'}
+                  className="flex flex-col items-center gap-0.5 p-1 rounded transition-colors hover:opacity-80"
+                >
+                  {readPages.includes(`${bookId}/${chapter}`) ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-amber-500" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M5 3a2 2 0 0 0-2 2v16l7-3 7 3V5a2 2 0 0 0-2-2H5z"/>
+                    </svg>
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" className={`w-5 h-5 ${theme.subheading}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 3a2 2 0 0 0-2 2v16l7-3 7 3V5a2 2 0 0 0-2-2H5z"/>
+                    </svg>
+                  )}
+                  <span className={`text-[10px] leading-none ${readPages.includes(`${bookId}/${chapter}`) ? 'text-amber-500' : theme.subheading}`}>
+                    Página lida
+                  </span>
+                </button>
+              </div>
+            </div>
+            <p className={`text-xs mt-0.5 ${theme.subheading}`}>
+              {versionMeta.name}
+            </p>
+          </div>
+
+          {/* Conteúdo rolável */}
+          <div className="flex-1 overflow-y-auto px-6 py-4">
           <div className="flex gap-6">
             <div className="flex-1 min-w-0">
-              <div className={`mb-4 pb-2 border-b ${theme.border}`}>
-                <h1 className={`text-xl font-bold ${theme.heading}`}>
-                  {bookMeta.name} {chapter}
-                </h1>
-                <p className={`text-xs mt-0.5 ${theme.subheading}`}>
-                  {versionMeta.name}
-                </p>
-              </div>
-
               {loading && (
                 <div className={`flex items-center justify-center py-20 ${theme.subheading}`}>
                   <svg className="animate-spin w-6 h-6 me-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -116,8 +274,11 @@ export default function ReaderPage() {
                 <VerseList
                   chapter={chapterData}
                   highlightVerse={highlightVerse}
+                  speakingVerse={speakingVerse}
                   rtl={rtl}
                   bodyClass={theme.body}
+                  bookId={bookId}
+                  chapterNum={chapter}
                 />
               )}
             </div>
@@ -159,6 +320,7 @@ export default function ReaderPage() {
               </button>
             )}
           </div>
+          </div>{/* fim área rolável */}
         </main>
 
         <Sidebar />

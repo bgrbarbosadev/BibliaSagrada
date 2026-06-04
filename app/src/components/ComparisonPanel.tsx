@@ -42,8 +42,11 @@ export default function ComparisonPanel({ bookId, chapter, highlightVerse, compa
           <VerseList
             chapter={chapterData}
             highlightVerse={highlightVerse}
+            speakingVerse={null}
             rtl={rtl}
             bodyClass={theme.body}
+            bookId={bookId}
+            chapterNum={chapter}
           />
         )}
       </div>

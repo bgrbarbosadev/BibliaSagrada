@@ -39,11 +39,11 @@ export const BG_THEMES: BgTheme[] = [
     pageStyle: { background: 'linear-gradient(160deg,#f9f0d8 0%,#eedcaa 100%)' },
     isDark: false,
     headerBg:   'bg-amber-50/90 backdrop-blur border-amber-300/60',
-    heading:    'text-amber-900',
-    subheading: 'text-amber-700/70',
-    body:       'text-amber-950',
+    heading:    'text-black',
+    subheading: 'text-black/70',
+    body:       'text-black',
     border:     'border-amber-300/60',
-    navBtn:     'text-amber-800/70 hover:text-amber-700',
+    navBtn:     'text-black/70 hover:text-black',
   },
   {
     id: 'forest',
@@ -95,6 +95,37 @@ export default function Sidebar() {
   const { bgTheme, setBgTheme, readingPlan, setReadingPlan, musicTrack, setMusicTrack, musicVolume, setMusicVolume } = useReaderStore()
   const active = BG_THEMES.find(t => t.id === bgTheme)!
   const isDark = active.isDark
+  const isParchment = bgTheme === 'parchment'
+
+  function selectedClass() {
+    if (isDark) return 'bg-amber-500/20 text-amber-300'
+    if (isParchment) return 'bg-amber-800/30 text-black font-semibold'
+    return 'bg-stone-300 text-black'
+  }
+
+  function unselectedClass() {
+    if (isDark) return 'text-white/70 hover:bg-white/10'
+    if (isParchment) return 'text-black hover:bg-amber-800/10'
+    return 'hover:bg-stone-100 dark:hover:bg-stone-800 text-black dark:text-stone-300'
+  }
+
+  function labelClass() {
+    if (isDark) return 'text-white/40'
+    if (isParchment) return 'text-black/60'
+    return 'text-stone-400 dark:text-stone-500'
+  }
+
+  function descClass() {
+    if (isDark) return 'text-white/40'
+    if (isParchment) return 'text-black/60'
+    return 'text-stone-400 dark:text-stone-500'
+  }
+
+  function sliderAccent() {
+    if (isDark) return '#f59e0b'
+    if (isParchment) return '#92400e'
+    return '#6b7280'
+  }
 
   return (
     <aside className={`w-52 flex-shrink-0 border-l px-4 py-6 flex flex-col gap-6 transition-colors duration-500 ${
@@ -105,7 +136,7 @@ export default function Sidebar() {
 
       <section>
         <h2 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${
-          isDark ? 'text-white/40' : 'text-stone-400 dark:text-stone-500'
+          labelClass()
         }`}>
           Tema de fundo
         </h2>
@@ -141,7 +172,7 @@ export default function Sidebar() {
 
       <section>
         <h2 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${
-          isDark ? 'text-white/40' : 'text-stone-400 dark:text-stone-500'
+          labelClass()
         }`}>
           Plano de leitura
         </h2>
@@ -152,15 +183,13 @@ export default function Sidebar() {
               onClick={() => setReadingPlan(plan.id)}
               className={`text-left px-3 py-2 rounded-lg transition-colors ${
                 readingPlan === plan.id
-                  ? 'bg-amber-500/20 text-amber-300'
-                  : isDark
-                    ? 'text-white/70 hover:bg-white/10'
-                    : 'hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-700 dark:text-stone-300'
+                  ? selectedClass()
+                  : unselectedClass()
               }`}
             >
-              <p className="text-xs font-semibold leading-tight">{plan.label}</p>
-              <p className={`text-[10px] leading-tight mt-0.5 ${
-                isDark ? 'text-white/40' : 'text-stone-400 dark:text-stone-500'
+              <p className="text-sm font-semibold leading-tight">{plan.label}</p>
+              <p className={`text-xs leading-tight mt-0.5 ${
+                labelClass()
               }`}>{plan.description}</p>
             </button>
           ))}
@@ -171,7 +200,7 @@ export default function Sidebar() {
 
       <section>
         <h2 className={`text-xs font-semibold uppercase tracking-wider mb-3 ${
-          isDark ? 'text-white/40' : 'text-stone-400 dark:text-stone-500'
+          labelClass()
         }`}>
           Música de fundo
         </h2>
@@ -182,18 +211,16 @@ export default function Sidebar() {
               onClick={() => setMusicTrack(track.id as MusicTrackId | null)}
               className={`text-left px-3 py-2 rounded-lg transition-colors ${
                 musicTrack === track.id
-                  ? 'bg-amber-500/20 text-amber-300'
-                  : isDark
-                    ? 'text-white/70 hover:bg-white/10'
-                    : 'hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-700 dark:text-stone-300'
+                  ? selectedClass()
+                  : unselectedClass()
               }`}
             >
-              <p className="text-xs font-semibold leading-tight flex items-center gap-1.5">
+              <p className="text-sm font-semibold leading-tight flex items-center gap-1.5">
                 <span className="opacity-70">{track.icon}</span>
                 {track.label}
               </p>
-              <p className={`text-[10px] leading-tight mt-0.5 ${
-                isDark ? 'text-white/40' : 'text-stone-400 dark:text-stone-500'
+              <p className={`text-xs leading-tight mt-0.5 ${
+                labelClass()
               }`}>{track.description}</p>
             </button>
           ))}
@@ -202,10 +229,10 @@ export default function Sidebar() {
         {musicTrack && (
           <div className="mt-3 px-1">
             <div className={`flex items-center justify-between mb-1 ${
-              isDark ? 'text-white/40' : 'text-stone-400 dark:text-stone-500'
+              labelClass()
             }`}>
-              <span className="text-[10px]">Volume</span>
-              <span className="text-[10px] tabular-nums">{Math.round(musicVolume * 100)}%</span>
+              <span className="text-xs">Volume</span>
+              <span className="text-xs tabular-nums">{Math.round(musicVolume * 100)}%</span>
             </div>
             <input
               type="range"
@@ -214,8 +241,8 @@ export default function Sidebar() {
               step={0.01}
               value={musicVolume}
               onChange={(e) => setMusicVolume(Number(e.target.value))}
-              className="w-full h-1 rounded-full appearance-none cursor-pointer accent-amber-500"
-              style={{ accentColor: '#f59e0b' }}
+              className="w-full h-1 rounded-full appearance-none cursor-pointer"
+              style={{ accentColor: sliderAccent() }}
             />
           </div>
         )}

@@ -40,6 +40,20 @@ function applyTheme(theme: Theme) {
   }
 }
 
+const SCROLLBAR_VARS: Record<BgThemeId, { track: string; thumb: string }> = {
+  default:   { track: '#f5f5f4', thumb: '#d6d3d1' },
+  parchment: { track: '#f5e6c8', thumb: '#c8a870' },
+  forest:    { track: '#162216', thumb: '#2d5a2d' },
+  night:     { track: '#0f0c29', thumb: '#4c4880' },
+}
+
+function applyBgTheme(id: BgThemeId) {
+  const root = document.documentElement
+  const vars = SCROLLBAR_VARS[id]
+  root.style.setProperty('--scrollbar-track', vars.track)
+  root.style.setProperty('--scrollbar-thumb', vars.thumb)
+}
+
 export const useReaderStore = create<ReaderStore>()(
   persist(
     (set) => ({
@@ -74,14 +88,17 @@ export const useReaderStore = create<ReaderStore>()(
       decreaseFontSize: () =>
         set((state) => ({ fontSize: Math.max(state.fontSize - FONT_STEP, MIN_FONT_SIZE) })),
 
-      setBgTheme: (id) => set({ bgTheme: id }),
+      setBgTheme: (id) => { applyBgTheme(id); set({ bgTheme: id }) },
 
       setReadingPlan: (id) => set({ readingPlan: id }),
     }),
     {
       name: 'biblia-reader-settings',
       onRehydrateStorage: () => (state) => {
-        if (state) applyTheme(state.theme)
+        if (state) {
+          applyTheme(state.theme)
+          applyBgTheme(state.bgTheme)
+        }
       },
     }
   )

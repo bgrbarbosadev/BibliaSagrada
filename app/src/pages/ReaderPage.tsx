@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom'
 import { getBook } from '../data/booksIndex'
 import { VERSIONS, DEFAULT_VERSION } from '../data/versions'
@@ -18,6 +18,7 @@ export default function ReaderPage() {
   const navigate = useNavigate()
 
   const { isCompareMode, toggleCompareMode, bgTheme } = useReaderStore()
+  const [compareVersion, setCompareVersion] = useState<string | null>(null)
 
   const chapter = Number(chapterParam) || 1
   const verseParam = searchParams.get('verse')
@@ -49,6 +50,17 @@ export default function ReaderPage() {
   const chapterData = data?.chapters[String(chapter)]
   const theme = BG_THEMES.find(t => t.id === bgTheme)!
 
+  function handleSelectCompareVersion(v: string) {
+    setCompareVersion(v)
+  }
+
+  function handleToggleCompare() {
+    if (isCompareMode) {
+      setCompareVersion(null)
+    }
+    toggleCompareMode()
+  }
+
   return (
     <div
       className="min-h-screen flex flex-col transition-all duration-500"
@@ -59,7 +71,9 @@ export default function ReaderPage() {
         chapter={chapter}
         version={version}
         isCompareMode={isCompareMode}
-        onToggleCompare={toggleCompareMode}
+        compareVersion={compareVersion}
+        onToggleCompare={handleToggleCompare}
+        onSelectCompareVersion={handleSelectCompareVersion}
         isDark={theme.isDark}
         headerBg={theme.headerBg}
       />
@@ -68,7 +82,7 @@ export default function ReaderPage() {
 
         {/* Área principal */}
         <main className="flex-1 min-w-0 px-6 py-6">
-          <div className={`flex gap-6 ${isCompareMode ? 'flex-col' : ''}`}>
+          <div className="flex gap-6">
             <div className="flex-1 min-w-0">
               <div className={`mb-4 pb-2 border-b ${theme.border}`}>
                 <h1 className={`text-xl font-bold ${theme.heading}`}>
@@ -108,12 +122,13 @@ export default function ReaderPage() {
               )}
             </div>
 
-            {isCompareMode && (
+            {isCompareMode && compareVersion && (
               <ComparisonPanel
                 bookId={bookId}
                 chapter={chapter}
                 highlightVerse={highlightVerse}
-                primaryVersion={version}
+                compareVersion={compareVersion}
+                onRemove={handleToggleCompare}
                 theme={theme}
               />
             )}

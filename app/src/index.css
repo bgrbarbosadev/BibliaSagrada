@@ -2,15 +2,37 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --scrollbar-track: #f5f5f4;
+  --scrollbar-thumb: #d6d3d1;
+}
+
 @layer base {
   html {
     @apply antialiased;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+    scrollbar-width: thin;
   }
 
   body {
     @apply bg-stone-50 text-stone-900 dark:bg-stone-950 dark:text-stone-100;
     transition: background-color 0.2s, color 0.2s;
   }
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  transition: background 0.5s;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 4px;
+  transition: background 0.5s;
 }
 
 @layer utilities {

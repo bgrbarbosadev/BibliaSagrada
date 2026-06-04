@@ -17,16 +17,21 @@ export function useBibleData(version: string, bookId: string): UseBibleDataResul
   useEffect(() => {
     if (!version || !bookId) return
 
+    // Limpa imediatamente para não exibir dados do livro anterior
+    setData(null)
+    setError(null)
+    setLoading(false)
+
     const key = `${version}/${bookId}`
 
     if (cache.has(key)) {
       setData(cache.get(key)!)
-      setError(null)
       return
     }
 
     setLoading(true)
-    setError(null)
+
+    let cancelled = false
 
     fetch(`/data/${version}/${bookId}.json`)
       .then((res) => {
@@ -34,15 +39,19 @@ export function useBibleData(version: string, bookId: string): UseBibleDataResul
         return res.json() as Promise<BookData>
       })
       .then((json) => {
+        if (cancelled) return
         cache.set(key, json)
         setData(json)
         setLoading(false)
       })
       .catch(() => {
+        if (cancelled) return
         setError('Texto não disponível para esta versão/livro.')
         setData(null)
         setLoading(false)
       })
+
+    return () => { cancelled = true }
   }, [version, bookId])
 
   return { data, loading, error }

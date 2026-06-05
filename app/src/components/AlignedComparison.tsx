@@ -64,7 +64,13 @@ export default function AlignedComparison({
       </div>
 
       {/* Versículos alinhados linha por linha */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto relative">
+        <img
+          src="/img/cristo.png"
+          alt=""
+          draggable={false}
+          className="absolute inset-0 w-full h-full object-cover opacity-25 pointer-events-none select-none"
+        />
         {loading ? (
           <p className={`text-center py-10 text-sm ${theme.subheading}`}>Carregando…</p>
         ) : (

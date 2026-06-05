@@ -447,7 +447,13 @@ export default function ReaderPage() {
                       {version} — {versionMeta.name}
                     </span>
                   </div>
-                  <div className="flex-1 p-3 text-sm">
+                  <div className="flex-1 p-3 text-sm relative">
+                    <img
+                      src="/img/cristo.png"
+                      alt=""
+                      draggable={false}
+                      className="absolute inset-0 w-full h-full object-cover opacity-25 pointer-events-none select-none"
+                    />
                     {loading && (
                       <div className={`flex items-center justify-center py-20 ${theme.subheading}`}>
                         <svg className="animate-spin w-6 h-6 me-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

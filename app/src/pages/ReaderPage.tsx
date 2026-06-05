@@ -342,44 +342,84 @@ export default function ReaderPage() {
                 </button>
 
                 {/* Velocidade de leitura */}
-                <div className="relative flex flex-col items-center gap-0.5">
-                  <button
-                    onClick={() => setSpeedMenuOpen(o => !o)}
-                    title="Velocidade de leitura"
-                    className={`p-1 rounded transition-colors hover:opacity-80 ${theme.subheading}`}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 2a10 10 0 1 1 0 20A10 10 0 0 1 12 2zm0 0v10l4 2"/>
-                    </svg>
-                  </button>
+                <button
+                  onClick={() => setSpeedMenuOpen(o => !o)}
+                  title="Velocidade de leitura"
+                  className={`flex flex-col items-center gap-0.5 p-1 rounded transition-colors hover:opacity-80 ${theme.subheading}`}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 2a10 10 0 1 1 0 20A10 10 0 0 1 12 2zm0 0v10l4 2"/>
+                  </svg>
                   <span className={`hidden sm:block text-[10px] leading-none ${theme.subheading}`}>
                     {SPEED_OPTIONS.find(o => o.key === speechRate)?.label ?? 'Normal'}
                   </span>
-                  {speedMenuOpen && (
+                </button>
+
+                {/* Modal de velocidade */}
+                {speedMenuOpen && (
+                  <div
+                    className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm"
+                    onClick={() => setSpeedMenuOpen(false)}
+                  >
                     <div
-                      className={`absolute top-full mt-1 right-0 z-30 rounded-xl shadow-xl border overflow-hidden min-w-[130px] ${
+                      className={`w-full sm:w-72 rounded-t-2xl sm:rounded-2xl shadow-2xl border overflow-hidden ${
                         theme.isDark ? 'bg-stone-900 border-white/10' : 'bg-white border-stone-200'
                       }`}
-                      onMouseLeave={() => setSpeedMenuOpen(false)}
+                      onClick={e => e.stopPropagation()}
                     >
-                      {SPEED_OPTIONS.map(opt => (
+                      {/* Cabeçalho */}
+                      <div className={`flex items-center justify-between px-5 py-4 border-b ${
+                        theme.isDark ? 'border-white/10' : 'border-stone-100'
+                      }`}>
+                        <div className="flex items-center gap-2">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 2a10 10 0 1 1 0 20A10 10 0 0 1 12 2zm0 0v10l4 2"/>
+                          </svg>
+                          <h3 className={`text-sm font-semibold ${theme.isDark ? 'text-white' : 'text-stone-800'}`}>
+                            Velocidade de leitura
+                          </h3>
+                        </div>
                         <button
-                          key={opt.key}
-                          onClick={() => handleSelectSpeed(opt.key)}
-                          className={`w-full text-left px-4 py-2 text-sm transition-colors ${
-                            speechRate === opt.key
-                              ? 'text-amber-500 font-semibold'
-                              : theme.isDark
-                                ? 'text-white/80 hover:bg-white/10'
-                                : 'text-stone-700 hover:bg-stone-100'
+                          onClick={() => setSpeedMenuOpen(false)}
+                          className={`p-1 rounded-lg transition-colors ${
+                            theme.isDark ? 'text-white/40 hover:text-white hover:bg-white/10' : 'text-stone-400 hover:text-stone-600 hover:bg-stone-100'
                           }`}
                         >
-                          {opt.label}
+                          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
                         </button>
-                      ))}
+                      </div>
+
+                      {/* Opções */}
+                      <div className="py-2">
+                        {SPEED_OPTIONS.map(opt => (
+                          <button
+                            key={opt.key}
+                            onClick={() => handleSelectSpeed(opt.key)}
+                            className={`w-full flex items-center justify-between px-5 py-3.5 transition-colors ${
+                              speechRate === opt.key
+                                ? 'text-amber-500 font-semibold'
+                                : theme.isDark
+                                  ? 'text-white/80 hover:bg-white/10'
+                                  : 'text-stone-700 hover:bg-stone-50'
+                            }`}
+                          >
+                            <span className="text-base">{opt.label}</span>
+                            {speechRate === opt.key && (
+                              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                              </svg>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Espaço seguro mobile */}
+                      <div className="h-4 sm:hidden" />
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
 
                 {/* Libras */}
                 <button

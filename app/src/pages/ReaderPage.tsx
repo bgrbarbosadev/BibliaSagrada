@@ -9,7 +9,7 @@ import { getCompatibleVersions } from '../validators/stateValidator'
 import { BG_THEMES } from '../components/Sidebar'
 import Header from '../components/Header'
 import VerseList from '../components/VerseList'
-import ComparisonPanel from '../components/ComparisonPanel'
+import AlignedComparison from '../components/AlignedComparison'
 import Sidebar from '../components/Sidebar'
 import MusicPlayer from '../components/MusicPlayer'
 import LibrasPopup from '../components/LibrasPopup'
@@ -413,58 +413,75 @@ export default function ReaderPage() {
                 </button>
               </div>
             </div>
-            <p className={`text-xs mt-0.5 ${theme.subheading} sm:block`}>
-              {versionMeta.name}
-            </p>
           </div>
 
           {/* Conteúdo rolável */}
           <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 sm:px-6 py-4">
+          {/* Modo comparação: grid alinhado por versículo */}
+          {isCompareMode && compareVersion && filteredChapterData ? (
+            <AlignedComparison
+              mainChapter={filteredChapterData}
+              mainVersionId={version}
+              mainVersionName={versionMeta.name}
+              compareVersionId={compareVersion}
+              bookId={bookId}
+              chapterNum={chapter}
+              highlightVerse={highlightVerse}
+              speakingVerse={speakingVerse}
+              rtl={rtl}
+              bodyClass={theme.body}
+              theme={theme}
+              onClose={handleToggleCompare}
+            />
+          ) : (
           <div className="flex flex-col md:flex-row gap-4 md:gap-6">
-            <div className="flex-1 min-w-0">
-              {loading && (
-                <div className={`flex items-center justify-center py-20 ${theme.subheading}`}>
-                  <svg className="animate-spin w-6 h-6 me-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-                  </svg>
-                  Carregando…
+            {/* Versão única — card com cabeçalho */}
+            {(() => {
+              const colBorder = theme.isDark ? 'border-white/10'  : 'border-stone-200 dark:border-stone-700'
+              const colHeader = theme.isDark ? 'bg-white/5'       : 'bg-stone-100 dark:bg-stone-800'
+              const nameText  = theme.isDark ? 'text-white/80'    : 'text-stone-700 dark:text-stone-200'
+              return (
+                <div className={`flex-1 min-w-0 flex flex-col border rounded-xl overflow-hidden ${colBorder}`}>
+                  <div className={`flex items-center gap-2 px-3 py-2 border-b ${colHeader} ${colBorder}`}>
+                    <span className={`flex-1 text-xs font-medium ${nameText}`}>
+                      {version} — {versionMeta.name}
+                    </span>
+                  </div>
+                  <div className="flex-1 p-3 text-sm">
+                    {loading && (
+                      <div className={`flex items-center justify-center py-20 ${theme.subheading}`}>
+                        <svg className="animate-spin w-6 h-6 me-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                        </svg>
+                        Carregando…
+                      </div>
+                    )}
+                    {error && (
+                      <div className="py-12 text-center">
+                        <p className={`text-sm ${theme.subheading}`}>{error}</p>
+                        <p className={`text-xs mt-1 opacity-60 ${theme.subheading}`}>
+                          Adicione o arquivo <code className="font-mono">/public/data/{version}/{bookId}.json</code>
+                        </p>
+                      </div>
+                    )}
+                    {filteredChapterData && (
+                      <VerseList
+                        chapter={filteredChapterData}
+                        highlightVerse={highlightVerse}
+                        speakingVerse={speakingVerse}
+                        rtl={rtl}
+                        bodyClass={theme.body}
+                        bookId={bookId}
+                        chapterNum={chapter}
+                      />
+                    )}
+                  </div>
                 </div>
-              )}
-
-              {error && (
-                <div className="py-12 text-center">
-                  <p className={`text-sm ${theme.subheading}`}>{error}</p>
-                  <p className={`text-xs mt-1 opacity-60 ${theme.subheading}`}>
-                    Adicione o arquivo <code className="font-mono">/public/data/{version}/{bookId}.json</code>
-                  </p>
-                </div>
-              )}
-
-              {filteredChapterData && (
-                <VerseList
-                  chapter={filteredChapterData}
-                  highlightVerse={highlightVerse}
-                  speakingVerse={speakingVerse}
-                  rtl={rtl}
-                  bodyClass={theme.body}
-                  bookId={bookId}
-                  chapterNum={chapter}
-                />
-              )}
-            </div>
-
-            {isCompareMode && compareVersion && (
-              <ComparisonPanel
-                bookId={bookId}
-                chapter={chapter}
-                highlightVerse={highlightVerse}
-                compareVersion={compareVersion}
-                onRemove={handleToggleCompare}
-                theme={theme}
-              />
-            )}
+              )
+            })()}
           </div>
+          )}
 
           <div className={`mt-8 flex justify-between items-center border-t pt-4 gap-2 ${theme.border}`}>
             {chapter > 1 ? (

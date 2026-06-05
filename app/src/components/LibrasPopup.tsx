@@ -46,8 +46,7 @@ export default function LibrasPopup({ currentVerseText, theme, onClose }: Props)
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
 
       <div
-        className={`relative z-10 rounded-2xl shadow-2xl border flex flex-col ${panelBg}`}
-        style={{ width: 360 }}
+        className={`relative z-10 rounded-2xl shadow-2xl border flex flex-col w-full max-w-sm mx-4 ${panelBg}`}
         onClick={e => e.stopPropagation()}
       >
         {/* Cabeçalho */}

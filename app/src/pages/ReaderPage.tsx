@@ -68,6 +68,7 @@ export default function ReaderPage() {
   const [freeReading, setFreeReading] = useState(true)
   const [verseFrom, setVerseFrom] = useState(1)
   const [verseTo, setVerseTo] = useState(1)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const speakingStateRef = useRef({ isSpeaking: false, speakingVerse: null as number | null })
   const restartVerseRef = useRef<number | null>(null)
@@ -264,6 +265,7 @@ export default function ReaderPage() {
         }}
         onVerseFromChange={v => { setVerseFrom(v); if (v > verseTo) setVerseTo(v) }}
         onVerseToChange={v => { setVerseTo(v); if (v < verseFrom) setVerseFrom(v) }}
+        onSidebarOpen={() => setSidebarOpen(true)}
       />
 
       <div className="flex flex-1 min-h-0 max-w-7xl mx-auto w-full">
@@ -271,12 +273,12 @@ export default function ReaderPage() {
         {/* Área principal */}
         <main className="flex-1 min-w-0 flex flex-col min-h-0">
           {/* Título — estático */}
-          <div className={`flex-shrink-0 px-6 pt-6 pb-3 border-b ${theme.border}`}>
-            <div className="flex items-center justify-between">
+          <div className={`flex-shrink-0 px-4 sm:px-6 pt-4 sm:pt-6 pb-3 border-b ${theme.border}`}>
+            <div className="flex items-start justify-between gap-2 flex-wrap sm:flex-nowrap">
               <h1 className={`text-xl font-bold ${theme.heading}`}>
                 {bookMeta.name} {chapter}
               </h1>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5 sm:gap-3 overflow-x-auto flex-shrink-0 pb-0.5">
 
                 {/* Tamanho da fonte */}
                 <div className="flex flex-col items-center gap-0.5">
@@ -295,7 +297,7 @@ export default function ReaderPage() {
                       </svg>
                     </button>
                   </div>
-                  <span className={`text-[10px] leading-none ${theme.subheading}`}>Tamanho</span>
+                  <span className={`hidden sm:block text-[10px] leading-none ${theme.subheading}`}>Tamanho</span>
                 </div>
 
                 {/* Comparar versões */}
@@ -312,7 +314,7 @@ export default function ReaderPage() {
                   <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7" />
                   </svg>
-                  <span className="text-[10px] leading-none">Comparar</span>
+                  <span className="hidden sm:block text-[10px] leading-none">Comparar</span>
                 </button>
 
                 {/* Ler página */}
@@ -334,7 +336,7 @@ export default function ReaderPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
                     </svg>
                   )}
-                  <span className={`text-[10px] leading-none ${isSpeaking ? 'text-amber-500' : theme.subheading}`}>
+                  <span className={`hidden sm:block text-[10px] leading-none ${isSpeaking ? 'text-amber-500' : theme.subheading}`}>
                     {isSpeaking ? 'Pausar' : 'Ler página'}
                   </span>
                 </button>
@@ -350,7 +352,7 @@ export default function ReaderPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 2a10 10 0 1 1 0 20A10 10 0 0 1 12 2zm0 0v10l4 2"/>
                     </svg>
                   </button>
-                  <span className={`text-[10px] leading-none ${theme.subheading}`}>
+                  <span className={`hidden sm:block text-[10px] leading-none ${theme.subheading}`}>
                     {SPEED_OPTIONS.find(o => o.key === speechRate)?.label ?? 'Normal'}
                   </span>
                   {speedMenuOpen && (
@@ -388,7 +390,7 @@ export default function ReaderPage() {
                   <svg xmlns="http://www.w3.org/2000/svg" className={`w-5 h-5 ${isLibrasActive ? 'text-amber-500' : theme.subheading}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 1 1 3 0m-3 6a1.5 1.5 0 0 0 3 0m0 0V8m0 3.5a1.5 1.5 0 0 1 3 0V11m0 0a1.5 1.5 0 0 1 3 0V11m-9 3a2 2 0 1 1-4 0 4 4 0 0 1 4-5m12 0a4 4 0 0 1-4 5" />
                   </svg>
-                  <span className={`text-[10px] leading-none ${isLibrasActive ? 'text-amber-500' : theme.subheading}`}>Libras</span>
+                  <span className={`hidden sm:block text-[10px] leading-none ${isLibrasActive ? 'text-amber-500' : theme.subheading}`}>Libras</span>
                 </button>
 
                 <button
@@ -405,20 +407,20 @@ export default function ReaderPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 3a2 2 0 0 0-2 2v16l7-3 7 3V5a2 2 0 0 0-2-2H5z"/>
                     </svg>
                   )}
-                  <span className={`text-[10px] leading-none ${readPages.includes(`${bookId}/${chapter}`) ? 'text-amber-500' : theme.subheading}`}>
+                  <span className={`hidden sm:block text-[10px] leading-none ${readPages.includes(`${bookId}/${chapter}`) ? 'text-amber-500' : theme.subheading}`}>
                     Página lida
                   </span>
                 </button>
               </div>
             </div>
-            <p className={`text-xs mt-0.5 ${theme.subheading}`}>
+            <p className={`text-xs mt-0.5 ${theme.subheading} sm:block`}>
               {versionMeta.name}
             </p>
           </div>
 
           {/* Conteúdo rolável */}
-          <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-4">
-          <div className="flex gap-6">
+          <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 sm:px-6 py-4">
+          <div className="flex flex-col md:flex-row gap-4 md:gap-6">
             <div className="flex-1 min-w-0">
               {loading && (
                 <div className={`flex items-center justify-center py-20 ${theme.subheading}`}>
@@ -464,7 +466,7 @@ export default function ReaderPage() {
             )}
           </div>
 
-          <div className={`mt-8 flex justify-between items-center border-t pt-4 ${theme.border}`}>
+          <div className={`mt-8 flex justify-between items-center border-t pt-4 gap-2 ${theme.border}`}>
             {chapter > 1 ? (
               <button
                 onClick={() => navigate(`/ler/${version}/${bookId}/${chapter - 1}`)}
@@ -492,7 +494,7 @@ export default function ReaderPage() {
           </div>{/* fim área rolável */}
         </main>
 
-        <Sidebar />
+        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       </div>
       <MusicPlayer />
 

@@ -2,6 +2,12 @@ import type React from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useReaderStore, type BgThemeId, type ReadingPlanId, type MusicTrackId } from '../store/useReaderStore'
 
+const DRAWER_BG: Partial<Record<BgThemeId, string>> = {
+  parchment: '#f5e6c8',
+  forest:    '#1a2e1a',
+  night:     '#13112b',
+}
+
 export interface BgTheme {
   id: BgThemeId
   label: string
@@ -100,7 +106,12 @@ const PLAN_START: Record<ReadingPlanId, { book: string; chapter: number }> = {
   'full-bible':    { book: 'GEN', chapter: 1 },
 }
 
-export default function Sidebar() {
+interface SidebarProps {
+  isOpen: boolean
+  onClose: () => void
+}
+
+export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const { bgTheme, setBgTheme, readingPlan, setReadingPlan, musicTrack, setMusicTrack, musicVolume, setMusicVolume } = useReaderStore()
   const navigate = useNavigate()
   const { version = 'ARC' } = useParams()
@@ -133,12 +144,50 @@ export default function Sidebar() {
     return '#6b7280'
   }
 
+  const drawerBgStyle: React.CSSProperties | undefined =
+    DRAWER_BG[bgTheme] ? { backgroundColor: DRAWER_BG[bgTheme] } : undefined
+
   return (
-    <aside className={`w-96 flex-shrink-0 border-l px-4 py-6 flex flex-col gap-5 overflow-y-auto transition-colors duration-500 ${
-      isDark
-        ? 'border-white/10 bg-black/10'
-        : 'border-stone-200 dark:border-stone-700'
-    }`}>
+    <>
+      {/* Overlay mobile */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          onClick={onClose}
+        />
+      )}
+
+    <aside
+      style={drawerBgStyle}
+      className={`
+        fixed top-0 right-0 h-full z-50
+        md:relative md:top-auto md:right-auto md:h-auto md:z-auto
+        w-[280px] md:w-96
+        flex-shrink-0 border-l flex flex-col gap-5 overflow-y-auto
+        transition-transform duration-300 md:transition-none
+        ${isOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0'}
+        ${isDark
+          ? 'border-white/10 bg-stone-950 md:bg-black/10'
+          : `border-stone-200 dark:border-stone-700 ${!drawerBgStyle ? 'bg-white dark:bg-stone-900 md:bg-transparent' : ''}`
+        }
+      `}
+    >
+      {/* Cabeçalho do drawer (mobile) */}
+      <div className={`flex items-center justify-between px-4 pt-5 pb-0 md:hidden`}>
+        <span className={`text-sm font-semibold ${isDark ? 'text-white/80' : 'text-stone-700'}`}>Configurações</span>
+        <button
+          onClick={onClose}
+          className={`p-1.5 rounded-lg transition-colors ${
+            isDark ? 'text-white/60 hover:text-white hover:bg-white/10' : 'text-stone-400 hover:text-stone-700 hover:bg-stone-100'
+          }`}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div className="px-4 py-4 md:py-6 flex flex-col gap-5 flex-1 overflow-y-auto">
 
       {/* Linha 1: Tema de fundo — largura total */}
       <section>
@@ -245,6 +294,8 @@ export default function Sidebar() {
 
       </div>
 
+      </div>{/* fim inner scroll */}
     </aside>
+    </>
   )
 }

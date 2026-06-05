@@ -65,7 +65,7 @@ export default function BookSelector({ currentBook, currentVersion, currentChapt
       </button>
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 px-4">
+        <div className="fixed inset-0 z-50 flex items-start justify-center pt-4 sm:pt-16 px-4">
           <div className="absolute inset-0" onClick={() => setOpen(false)} />
           <div
             className={`relative rounded-2xl shadow-2xl w-full max-w-lg max-h-[70vh] flex flex-col overflow-hidden border ${borderCls} ${!modalBg ? 'bg-white dark:bg-stone-900' : ''}`}
